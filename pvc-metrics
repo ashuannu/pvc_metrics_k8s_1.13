@@ -2,37 +2,48 @@ export CLUSTER=nextgen
 kubectx $CLUSTER
 
 echo "# PVC Usage exporter" > /var/www/html/metrics_tmp
+kubens public
+MINIO_POD=$(kubectl get po | grep minio | awk '{ print $1 }')
+MINIO=$(kubectl exec $MINIO_POD -- df -B 1 | grep "/storage")
+PVC_FILESYSTEM_TOTAL_BYTES=$(echo $MINIO | awk '{ print $2 }')
+PVC_FILESYSTEM_USAGE_BYTES=$(echo $MINIO | awk '{ print $3 }')
+PVC_FILESYSTEM_AVAIL_BYTES=$(echo $MINIO | awk '{ print $4 }')
+MOUNT_POINT=$(echo $MINIO | awk '{ print $6 }')
+echo "pvc_filesystem_total_bytes{cluster=\"$CLUSTER\",namespace=\"public\",statefulset_name=\"minio\",pod_name=\"$MINIO_POD\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_TOTAL_BYTES >> /var/www/html/metrics_tmp
+    echo "pvc_filesystem_usage_bytes{cluster=\"$CLUSTER\",namespace=\"public\",statefulset_name=\"minio\",pod_name=\"$MINIO_POD\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_USAGE_BYTES >> /var/www/html/metrics_tmp
+    echo "pvc_filesystem_avail_bytes{cluster=\"$CLUSTER\",namespace=\"public\",statefulset_name=\"minio\",pod_name=\"$MINIO_POD\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_AVAIL_BYTES >> /var/www/html/metrics_tmp
+
 while read -r NAMESPACE;
 do
-	kubens $NAMESPACE
-	MONGO=$(kubectl exec mongo-0 -- df -B 1 | grep "/data")
-	REDIS=$(kubectl exec redis-0 -- df -B 1 | grep "/data")
-	MQ=$(kubectl exec rabbitmq-0 -- df -B 1 | grep "/var/lib/rabbitmq")
+    kubens $NAMESPACE
+    MONGO=$(kubectl exec mongo-0 -- df -B 1 | grep "/data")
+    REDIS=$(kubectl exec redis-0 -- df -B 1 | grep "/data")
+    MQ=$(kubectl exec rabbitmq-0 -- df -B 1 | grep "/var/lib/rabbitmq")
 
-	PVC_FILESYSTEM_TOTAL_BYTES=$(echo $MONGO | awk '{ print $2 }')
-	PVC_FILESYSTEM_USAGE_BYTES=$(echo $MONGO | awk '{ print $3 }')
-	PVC_FILESYSTEM_AVAIL_BYTES=$(echo $MONGO | awk '{ print $4 }')
-	MOUNT_POINT=$(echo $MONGO | awk '{ print $6 }')
-	echo "pvc_filesystem_total_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"mongo\",pod_name=\"mongo-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_TOTAL_BYTES >> /var/www/html/metrics/index1.html
-	echo "pvc_filesystem_usage_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"mongo\",pod_name=\"mongo-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_USAGE_BYTES >> /var/www/html/metrics/index1.html
-	echo "pvc_filesystem_avail_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"mongo\",pod_name=\"mongo-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_AVAIL_BYTES >> /var/www/html/metrics/index1.html
+    PVC_FILESYSTEM_TOTAL_BYTES=$(echo $MONGO | awk '{ print $2 }')
+    PVC_FILESYSTEM_USAGE_BYTES=$(echo $MONGO | awk '{ print $3 }')
+    PVC_FILESYSTEM_AVAIL_BYTES=$(echo $MONGO | awk '{ print $4 }')
+    MOUNT_POINT=$(echo $MONGO | awk '{ print $6 }')
+    echo "pvc_filesystem_total_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"mongo\",pod_name=\"mongo-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_TOTAL_BYTES >> /var/www/html/metrics_tmp
+    echo "pvc_filesystem_usage_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"mongo\",pod_name=\"mongo-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_USAGE_BYTES >> /var/www/html/metrics_tmp
+    echo "pvc_filesystem_avail_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"mongo\",pod_name=\"mongo-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_AVAIL_BYTES >> /var/www/html/metrics_tmp
 
-	PVC_FILESYSTEM_TOTAL_BYTES=$(echo $REDIS | awk '{ print $2 }')
-	PVC_FILESYSTEM_USAGE_BYTES=$(echo $REDIS | awk '{ print $3 }')
-	PVC_FILESYSTEM_AVAIL_BYTES=$(echo $REDIS | awk '{ print $4 }')
-	MOUNT_POINT=$(echo $REDIS | awk '{ print $6 }')
-	echo "pvc_filesystem_total_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"redis\",pod_name=\"redis-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_TOTAL_BYTES >> /var/www/html/metrics/index1.html
-	echo "pvc_filesystem_usage_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"redis\",pod_name=\"redis-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_USAGE_BYTES >> /var/www/html/metrics/index1.html
-	echo "pvc_filesystem_avail_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"redis\",pod_name=\"redis-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_AVAIL_BYTES >> /var/www/html/metrics/index1.html
+    PVC_FILESYSTEM_TOTAL_BYTES=$(echo $REDIS | awk '{ print $2 }')
+    PVC_FILESYSTEM_USAGE_BYTES=$(echo $REDIS | awk '{ print $3 }')
+    PVC_FILESYSTEM_AVAIL_BYTES=$(echo $REDIS | awk '{ print $4 }')
+    MOUNT_POINT=$(echo $REDIS | awk '{ print $6 }')
+    echo "pvc_filesystem_total_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"redis\",pod_name=\"redis-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_TOTAL_BYTES >> /var/www/html/metrics_tmp
+    echo "pvc_filesystem_usage_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"redis\",pod_name=\"redis-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_USAGE_BYTES >> /var/www/html/metrics_tmp
+    echo "pvc_filesystem_avail_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"redis\",pod_name=\"redis-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_AVAIL_BYTES >> /var/www/html/metrics_tmp
 
-	PVC_FILESYSTEM_TOTAL_BYTES=$(echo $MQ | awk '{ print $2 }')
-	PVC_FILESYSTEM_USAGE_BYTES=$(echo $MQ | awk '{ print $3 }')
-	PVC_FILESYSTEM_AVAIL_BYTES=$(echo $MQ | awk '{ print $4 }')
-	MOUNT_POINT=$(echo $MQ | awk '{ print $6 }')
-	echo "pvc_filesystem_total_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"rabbitmq\",pod_name=\"rabbitmq-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_TOTAL_BYTES >> /var/www/html/metrics/index1.html
-	echo "pvc_filesystem_usage_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"rabbitmq\",pod_name=\"rabbitmq-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_USAGE_BYTES >> /var/www/html/metrics/index1.html
-	echo "pvc_filesystem_avail_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"rabbitmq\",pod_name=\"rabbitmq-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_AVAIL_BYTES >> /var/www/html/metrics/index1.html
+    PVC_FILESYSTEM_TOTAL_BYTES=$(echo $MQ | awk '{ print $2 }')
+    PVC_FILESYSTEM_USAGE_BYTES=$(echo $MQ | awk '{ print $3 }')
+    PVC_FILESYSTEM_AVAIL_BYTES=$(echo $MQ | awk '{ print $4 }')
+    MOUNT_POINT=$(echo $MQ | awk '{ print $6 }')
+    echo "pvc_filesystem_total_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"rabbitmq\",pod_name=\"rabbitmq-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_TOTAL_BYTES >> /var/www/html/metrics_tmp
+    echo "pvc_filesystem_usage_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"rabbitmq\",pod_name=\"rabbitmq-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_USAGE_BYTES >> /var/www/html/metrics_tmp
+    echo "pvc_filesystem_avail_bytes{cluster=\"$CLUSTER\",namespace=\"$NAMESPACE\",statefulset_name=\"rabbitmq\",pod_name=\"rabbitmq-0\",mount_point=\"$MOUNT_POINT\"}" $PVC_FILESYSTEM_AVAIL_BYTES >> /var/www/html/metrics_tmp
 
-done < namespaces.list
+done < /usr/local/bin/nextgen_namespaces.list
 
 cat /var/www/html/metrics_tmp > /var/www/html/metrics
